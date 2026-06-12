@@ -1,0 +1,42 @@
+# Entorno virtual
+.venv/
+venv/
+env/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Variables de entorno y credenciales
+.env
+*.env
+secrets/
+
+# dbt
+target/
+dbt_packages/
+logs/
+.dbt/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Archivos de datos crudos (pesados, no van en git)
+data/raw/
+*.csv
+*.parquet
+
+# Power BI
+*.pbix
+
+# VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
