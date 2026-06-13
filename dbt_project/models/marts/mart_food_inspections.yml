@@ -1,0 +1,68 @@
+version: 2
+
+models:
+  - name: mart_food_inspections
+    description: >
+      Tabla analítica principal lista para Power BI.
+      Granularidad: una fila por inspección.
+      Excluye registros fuera de jurisdicción de Chicago.
+      Incluye métricas de historial por establecimiento y dimensiones temporales.
+    columns:
+      - name: inspection_id
+        description: "Identificador único de la inspección"
+        data_tests:
+          - unique
+          - not_null
+
+      - name: inspection_date
+        description: "Fecha de inspección"
+        data_tests:
+          - not_null
+
+      - name: results
+        description: "Resultado de la inspección"
+        data_tests:
+          - not_null
+
+      - name: pass_flag
+        description: "1 si Pass o Pass w/ Conditions, 0 en caso contrario"
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [0, 1]
+
+      - name: fail_flag
+        description: "1 si Fail, 0 en caso contrario"
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [0, 1]
+
+      - name: risk_level
+        description: "Nivel de riesgo normalizado"
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['HIGH', 'MEDIUM', 'LOW', 'UNKNOWN']
+
+      - name: violation_count
+        description: "Número de violaciones registradas"
+        data_tests:
+          - not_null
+
+      - name: repeat_fail_flag
+        description: "True si el establecimiento tiene más de una falla en su historial"
+        data_tests:
+          - not_null
+
+      - name: inspection_year
+        description: "Año de inspección para análisis de tendencias"
+        data_tests:
+          - not_null
+
+      - name: facility_type_grouped
+        description: "Tipo de establecimiento agrupado — tipos con menos de 10 registros se consolidan en OTHER"
+        data_tests:
+          - not_null
