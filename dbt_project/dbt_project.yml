@@ -1,0 +1,20 @@
+name: 'chicago_food_inspections'
+version: '1.0.0'
+config-version: 2
+
+profile: 'chicago_food_inspections'
+
+model-paths: ["models"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+
+models:
+  chicago_food_inspections:
+    staging:
+      +schema: staging
+      +materialized: view
+    marts:
+      +schema: marts
+      +materialized: table

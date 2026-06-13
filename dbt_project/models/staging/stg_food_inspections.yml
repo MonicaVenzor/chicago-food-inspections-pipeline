@@ -1,0 +1,60 @@
+version: 2
+
+models:
+  - name: stg_food_inspections
+    description: >
+      Capa staging de inspecciones sanitarias de Chicago.
+      Aplica normalización de tipos, limpieza de texto y flags de calidad
+      documentados. No elimina registros — preserva trazabilidad completa.
+    columns:
+      - name: inspection_id
+        description: "Identificador único de la inspección"
+        data_tests:
+          - unique
+          - not_null
+
+      - name: inspection_date
+        description: "Fecha de inspección convertida a DATE desde MM/DD/YYYY"
+        data_tests:
+          - not_null
+
+      - name: results
+        description: "Resultado de la inspección"
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['Pass', 'Fail', 'Pass w/ Conditions', 'Out of Business',
+                         'No Entry', 'Not Ready', 'Business Not Located']
+
+      - name: risk_level
+        description: "Nivel de riesgo normalizado"
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['HIGH', 'MEDIUM', 'LOW', 'UNKNOWN']
+
+      - name: violation_count
+        description: "Número de violaciones contadas por separador pipe"
+        data_tests:
+          - not_null
+
+      - name: flag_out_of_jurisdiction
+        description: "True si city != CHICAGO"
+        data_tests:
+          - not_null
+
+      - name: flag_fail_without_violations
+        description: "True si result=Fail pero violations es NULL — inconsistencia interna"
+        data_tests:
+          - not_null
+
+      - name: flag_invalid_risk
+        description: "True si risk no es 1, 2 ni 3"
+        data_tests:
+          - not_null
+
+      - name: flag_missing_license
+        description: "True si license_number es NULL"
+        data_tests:
+          - not_null

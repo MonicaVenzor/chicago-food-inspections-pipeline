@@ -1,0 +1,18 @@
+version: 2
+
+sources:
+  - name: raw_data
+    schema: raw_data
+    description: "Datos crudos ingestados desde el portal oficial de la Ciudad de Chicago"
+    tables:
+      - name: food_inspections
+        description: "Inspecciones sanitarias de establecimientos de alimentos en Chicago desde 2010"
+        columns:
+          - name: inspection_id
+            description: "Identificador único de la inspección"
+          - name: dba_name
+            description: "Nombre comercial del establecimiento (Doing Business As)"
+          - name: violations
+            description: "Texto libre con violaciones detectadas, separadas por pipe. No se parsea por inconsistencia estructural documentada."
+          - name: ingested_at
+            description: "Timestamp de ingesta a PostgreSQL — metadata de gobernanza, no existe en fuente original"
