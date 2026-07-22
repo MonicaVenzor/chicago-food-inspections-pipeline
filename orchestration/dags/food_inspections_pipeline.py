@@ -6,11 +6,8 @@ Orquesta el pipeline completo de Chicago Food Inspections:
   3. dbt_run           — ejecuta staging + mart
   4. dbt_test          — valida calidad de datos
 
-Decisión de diseño: pipeline secuencial con dependencias estrictas.
-Si cualquier tarea falla, las siguientes no corren — igual que un
-proceso regulado con criterios de aceptación formales en cada etapa.
-
-Schedule: diario a las 6am (los datos de Chicago se actualizan diariamente)
+Credentials are loaded from environment variables — never hardcoded.
+Set PG_PASSWORD and PG_HOST in your environment or Docker compose file.
 """
 
 from airflow import DAG
@@ -22,38 +19,44 @@ from psycopg2.extras import execute_values
 import pandas as pd
 import urllib.request
 import os
+import csv
 
-# --- Rutas dentro del contenedor ---
 PROJECT_DIR = "/opt/airflow/project"
 RAW_FILE    = f"{PROJECT_DIR}/data/raw/food_inspections.csv"
-VENV_PYTHON = f"{PROJECT_DIR}/.venv/bin/python"
 DBT_DIR     = f"{PROJECT_DIR}/dbt_project"
 
+# Credentials from environment variables
+PG_DBNAME   = os.getenv("PG_DBNAME", "mvenzor_db")
+PG_USER     = os.getenv("PG_USER", "mvenzor")
+PG_PASSWORD = os.getenv("PG_PASSWORD", "")
+PG_HOST     = os.getenv("PG_HOST", "localhost")
+PG_PORT     = int(os.getenv("PG_PORT", "5432"))
+
 default_args = {
-    "owner": "mvenzor",
+    "owner": "analytics-engineer",
     "retries": 1,
     "retry_delay": timedelta(minutes=5),
     "email_on_failure": False,
 }
 
 def download_data():
-    """Descarga CSV actualizado desde portal oficial de Chicago."""
     url = "https://data.cityofchicago.org/api/views/4ijn-s7e5/rows.csv?accessType=DOWNLOAD"
     os.makedirs(os.path.dirname(RAW_FILE), exist_ok=True)
-    print(f"Descargando desde: {url}")
+    print(f"Downloading from: {url}")
     urllib.request.urlretrieve(url, RAW_FILE)
     size_mb = os.path.getsize(RAW_FILE) / 1024 / 1024
-    print(f"Descarga completada: {size_mb:.1f} MB")
+    print(f"Download complete: {size_mb:.1f} MB")
 
 def load_to_postgres():
-    """Ingesta idempotente a raw_data.food_inspections via Unix socket."""
-    print(f"Leyendo CSV: {RAW_FILE}")
+    print(f"Reading CSV: {RAW_FILE}")
     df = pd.read_csv(
         RAW_FILE,
         low_memory=False,
-        dtype={"License #": str, "Zip": str}
+        dtype={"License #": str, "Zip": str},
+        quoting=csv.QUOTE_ALL,
+        on_bad_lines='skip'
     )
-    print(f"Filas leídas: {len(df):,}")
+    print(f"Rows read: {len(df):,}")
 
     df.columns = [
         "inspection_id", "dba_name", "aka_name", "license_number",
@@ -63,9 +66,11 @@ def load_to_postgres():
     ]
     df = df.where(pd.notna(df), None)
 
-    conn = psycopg2.connect(dbname="mvenzor_db", user="mvenzor",
-                            password="5121", host="172.29.180.193", port=5432)
-    cur  = conn.cursor()
+    conn = psycopg2.connect(
+        dbname=PG_DBNAME, user=PG_USER,
+        password=PG_PASSWORD, host=PG_HOST, port=PG_PORT
+    )
+    cur = conn.cursor()
     cur.execute("TRUNCATE TABLE raw_data.food_inspections;")
 
     cols = [
@@ -89,12 +94,12 @@ def load_to_postgres():
     conn.commit()
     cur.close()
     conn.close()
-    print(f"Carga completada: {len(rows):,} registros")
+    print(f"Load complete: {len(rows):,} records")
 
 with DAG(
     dag_id="food_inspections_pipeline",
     default_args=default_args,
-    description="Pipeline diario — Chicago Food Inspections",
+    description="Daily pipeline — Chicago Food Inspections",
     schedule_interval="0 6 * * *",
     start_date=datetime(2024, 1, 1),
     catchup=False,
