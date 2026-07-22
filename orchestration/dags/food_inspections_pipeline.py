@@ -118,12 +118,12 @@ with DAG(
 
     t3_dbt_run = BashOperator(
         task_id="dbt_run",
-        bash_command=f"cd {DBT_DIR} && dbt run --profiles-dir /home/mvenzor/.dbt",
+        bash_command=f"cd {DBT_DIR} && dbt run --profiles-dir /home/airflow/.dbt",
     )
 
     t4_dbt_test = BashOperator(
         task_id="dbt_test",
-        bash_command=f"cd {DBT_DIR} && dbt test --profiles-dir /home/mvenzor/.dbt",
+        bash_command=f"cd {DBT_DIR} && dbt test --profiles-dir /home/airflow/.dbt",
     )
 
     t1_download >> t2_load >> t3_dbt_run >> t4_dbt_test
