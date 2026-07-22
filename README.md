@@ -25,18 +25,19 @@ The Chicago Department of Public Health conducts food safety inspections across 
 
 ## Architecture
 
+```
 City of Chicago API (Socrata)
-↓
+        ↓
 raw_data.food_inspections (PostgreSQL)
-↓
+        ↓
 staging.stg_food_inspections (dbt view — 11 tests)
-↓
+        ↓
 marts.mart_food_inspections (dbt table — 13 tests)
-↓
+        ↓
 XGBoost Classifier + Power BI Dashboard
-↑
+        ↑
 Apache Airflow DAG (daily orchestration)
-
+```
 
 ---
 
@@ -59,6 +60,7 @@ Apache Airflow DAG (daily orchestration)
 This project applies ISO 9001/17025-informed governance practices at every layer:
 
 ### Data Quality Findings (raw layer)
+
 | Field | Issue | Volume | Decision |
 |---|---|---|---|
 | `city` | Case inconsistency: CHICAGO / Chicago / chicago / CCHICAGO | 745 records | Normalized to UPPER in staging |
@@ -110,8 +112,9 @@ This project applies ISO 9001/17025-informed governance practices at every layer
 
 Apache Airflow DAG `food_inspections_pipeline` runs daily at 06:00 UTC:
 
+```
 download_data → load_to_postgres → dbt_run → dbt_test
-
+```
 
 Sequential with strict dependencies — if any step fails, downstream tasks do not run. Equivalent to formal acceptance criteria in a regulated process.
 
@@ -119,26 +122,27 @@ Sequential with strict dependencies — if any step fails, downstream tasks do n
 
 ## Project Structure
 
+```
 chicago-food-inspections/
 ├── data/
-│ └── raw/ # Raw CSV (gitignored — 326MB)
+│   └── raw/                    # Raw CSV (gitignored — 326MB)
 ├── ingestion/
-│ └── load_food_inspections.py
+│   └── load_food_inspections.py
 ├── dbt_project/
-│ ├── models/
-│ │ ├── staging/ # stg_food_inspections + 11 tests
-│ │ └── marts/ # mart_food_inspections + 13 tests
-│ └── macros/
-│ └── generate_schema_name.sql
+│   ├── models/
+│   │   ├── staging/            # stg_food_inspections + 11 tests
+│   │   └── marts/              # mart_food_inspections + 13 tests
+│   └── macros/
+│       └── generate_schema_name.sql
 ├── analysis/
-│ ├── eda.py
-│ └── model.py
+│   ├── eda.py
+│   └── model.py
 ├── orchestration/
-│ ├── docker-compose.yml
-│ └── dags/
-│ └── food_inspections_pipeline.py
+│   ├── docker-compose.yml
+│   └── dags/
+│       └── food_inspections_pipeline.py
 └── requirements.txt
-
+```
 
 ---
 
