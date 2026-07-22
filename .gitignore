@@ -40,3 +40,5 @@ data/raw/
 # OS
 .DS_Store
 Thumbs.db
+analysis/model/*.joblib
+orchestration/dbt_profiles/
